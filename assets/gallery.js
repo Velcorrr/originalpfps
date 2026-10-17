@@ -64,7 +64,7 @@
   }
   function card(x,i){
     const b=document.createElement('button');b.className='card';b.style.setProperty('--delay',`${Math.min(i,12)*16}ms`);b.setAttribute('aria-label',`Preview ${x.name}, ${x.category}, ${x.platform}`);
-    const pic=document.createElement('span');pic.className='image';const im=document.createElement('img');im.src=imagePath(x);im.alt=x.name;im.width=320;im.height=320;im.loading='lazy';im.decoding='async';const indicator=document.createElement('span');indicator.className='open-indicator';indicator.textContent='↗';indicator.setAttribute('aria-hidden','true');pic.append(im,indicator);
+    const pic=document.createElement('span');pic.className='image';const im=document.createElement('img');im.src=imagePath(x);im.alt=x.name;im.width=320;im.height=320;im.loading='lazy';im.decoding='async';pic.append(im);
     const name=document.createElement('span');name.className='name';name.textContent=x.name;const category=document.createElement('span');category.className='category';category.textContent=x.category;const platform=document.createElement('span');platform.className='platform';platform.textContent=x.platform;b.append(pic,name,category,platform);
     b.addEventListener('click',()=>openPreview(x,b));return b;
   }

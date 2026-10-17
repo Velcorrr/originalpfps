@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+preview*.png
+
+/assets/app.js
+/assets/style.css
+/assets/favicon.svg
+/sources.html

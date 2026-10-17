@@ -9,14 +9,11 @@
   const params = new URLSearchParams(location.search);
   const platforms = ['Netflix','Disney+','HBO Max','Prime Video','Crunchyroll','Paramount+','Peacock','Movies Anywhere'];
   const state = {query:params.get('q')||'',platform:platforms.includes(params.get('platform'))?params.get('platform'):'',limit:84};
-  let results=[],timer,returnFocus;
+  let results=[],timer,returnFocus,renderedCount=0;
+  const platformSections=new Map(),seriesSections=new Map();
   for(const p of platforms)$('platform').append(new Option(`${p} (${all.filter(x=>x.platform===p).length.toLocaleString()})`,p));
   $('search').value=state.query;$('platform').value=state.platform;
-  const featuredNames=[['Netflix','Wednesday'],['Disney+','Grogu'],['Disney+','Stitch'],['HBO Max','Finn from Adventure Time'],['Netflix','Jinx'],['Movies Anywhere','Spider-Man'],['Movies Anywhere','Baymax'],['Disney+','Mickey Mouse']];
-  const featured=featuredNames.map(([p,n])=>all.find(x=>x.platform===p&&x.name===n)).filter(Boolean);
-  const seen=new Set(featured.map(x=>x.id));
-  const groups=platforms.map(p=>all.filter(x=>x.platform===p));
-  for(let i=0;i<Math.max(...groups.map(g=>g.length));i++)for(const group of groups){const x=group[i];if(x&&!seen.has(x.id)){featured.push(x);seen.add(x.id);}}
+  const organized=[...all].sort((a,b)=>platforms.indexOf(a.platform)-platforms.indexOf(b.platform)||a.category.localeCompare(b.category,undefined,{sensitivity:'base',numeric:true})||a.name.localeCompare(b.name,undefined,{sensitivity:'base',numeric:true}));
   function syncUrl(){const p=new URLSearchParams();if(state.query)p.set('q',state.query);if(state.platform)p.set('platform',state.platform);try{history.replaceState(null,'',location.pathname+(p.size?'?'+p.toString():'')+location.hash);}catch{}}
   function openPreview(x,trigger){
     returnFocus=trigger||document.activeElement;$('picture').src=imagePath(x,true);$('picture').alt=x.name;$('picture-name').textContent=x.name;$('picture-platform').textContent=x.platform;$('picture-category').textContent=x.category;$('picture-size').textContent=`${x.width} × ${x.height}`;
@@ -30,16 +27,32 @@
     b.addEventListener('click',()=>openPreview(x,b));return b;
   }
   function render(append=false){
-    const start=append?$('grid').children.length:0;if(!append)$('grid').replaceChildren();const frag=document.createDocumentFragment();results.slice(start,state.limit).forEach((x,i)=>frag.append(card(x,i)));$('grid').append(frag);
+    const start=append?renderedCount:0;
+    if(!append){$('grid').replaceChildren();platformSections.clear();seriesSections.clear();}
+    results.slice(start,state.limit).forEach((x,i)=>{
+      if(!platformSections.has(x.platform)){
+        const section=document.createElement('section');section.className='platform-group';
+        const heading=document.createElement('h2');heading.className='platform-heading';heading.textContent=x.platform;
+        const count=document.createElement('span');count.textContent=results.filter(r=>r.platform===x.platform).length.toLocaleString()+' pictures';heading.append(count);
+        section.append(heading);$('grid').append(section);platformSections.set(x.platform,section);
+      }
+      const key=JSON.stringify([x.platform,x.category]);
+      if(!seriesSections.has(key)){
+        const section=document.createElement('section');section.className='series-group';const heading=document.createElement('h3');heading.textContent=x.category;
+        const grid=document.createElement('div');grid.className='grid';section.append(heading,grid);platformSections.get(x.platform).append(section);seriesSections.set(key,grid);
+      }
+      seriesSections.get(key).append(card(x,i));
+    });
+    renderedCount=Math.min(state.limit,results.length);
     $('empty').hidden=results.length!==0;$('more').hidden=state.limit>=results.length;$('progress').textContent=results.length?`${Math.min(state.limit,results.length).toLocaleString()} of ${results.length.toLocaleString()}`:'';
   }
   function update(){
-    state.limit=84;const words=normalize(state.query.trim()).split(/\s+/).filter(Boolean);results=featured.filter(x=>(!state.platform||x.platform===state.platform)&&words.every(w=>searchIndex.get(x.id).includes(w)));
+    state.limit=84;const words=normalize(state.query.trim()).split(/\s+/).filter(Boolean);results=organized.filter(x=>(!state.platform||x.platform===state.platform)&&words.every(w=>searchIndex.get(x.id).includes(w)));
     const strong=document.createElement('strong');strong.textContent=results.length.toLocaleString();$('count').replaceChildren(strong,document.createTextNode(` picture${results.length===1?'':'s'}${state.platform?' · '+state.platform:''}`));$('reset').hidden=!(state.query||state.platform);render();syncUrl();
   }
   function clear(){clearTimeout(timer);state.query='';state.platform='';$('search').value='';$('platform').value='';update();}
   $('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{state.query=$('search').value;update();},100);});$('platform').addEventListener('change',()=>{state.platform=$('platform').value;update();});
-  $('reset').addEventListener('click',clear);$('empty-reset').addEventListener('click',clear);$('more').addEventListener('click',()=>{const start=$('grid').children.length;state.limit+=84;render(true);$('grid').children[start]?.focus({preventScroll:true});});
+  $('reset').addEventListener('click',clear);$('empty-reset').addEventListener('click',clear);$('more').addEventListener('click',()=>{const start=renderedCount;state.limit+=84;render(true);$('grid').querySelectorAll('.card')[start]?.focus({preventScroll:true});});
   $('close').addEventListener('click',()=>$('preview').close());$('info-close').addEventListener('click',()=>$('info').close());$('info-open').addEventListener('click',()=>{returnFocus=$('info-open');$('info').showModal();document.body.classList.add('modal-open');});
   for(const id of ['preview','info']){
     $(id).addEventListener('close',()=>{document.body.classList.remove('modal-open');if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});});

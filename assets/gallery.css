@@ -24,3 +24,9 @@ dialog{color:var(--text);padding:0;border:1px solid #e83b3b66;border-radius:18px
 #more:hover,.empty button:hover{border-color:#ff555529;background:#c62e2e23;box-shadow:0 0 22px #ff373711}
 .download{border-color:#ff77772b;border-radius:12px;background:linear-gradient(125deg,#c22d2dd1,#931d1da8);box-shadow:0 0 26px #ff37371a}
 @media(max-width:600px){.controls{padding-top:24px;gap:8px}.search input{height:48px;border-radius:14px}.platform-select select{height:43px;border-radius:14px}.platform-select svg{top:14px}.card{border-radius:12px}}
+
+.platform-group + .platform-group{margin-top:44px}
+.platform-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:21px;font-weight:600;letter-spacing:-.4px;margin:4px 0 28px;padding-bottom:14px;border-bottom:1px solid #ff4c4c20;color:#f0dada}
+.platform-heading>span{font-size:10px;font-weight:400;letter-spacing:0;color:#9e6d6d}
+.series-group{margin-bottom:28px}.series-group>h3{font-size:13px;font-weight:550;color:#cba0a0;margin:0 0 13px;letter-spacing:.1px}
+@media(max-width:600px){.platform-heading{font-size:18px;margin-bottom:24px}.platform-heading>span{font-size:9px}.series-group>h3{font-size:12px}.series-group{margin-bottom:25px}}

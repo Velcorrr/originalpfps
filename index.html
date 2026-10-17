@@ -10,7 +10,7 @@
 <h1 class="sr-only">Profile picture gallery</h1>
 <div class="controls">
 <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search a character, series, or movie…" aria-label="Search pictures" autocomplete="off"><kbd>/</kbd></label>
-<label class="platform-select"><select id="platform" aria-label="Platform"><option value="">All platforms</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></label>
+<div class="platform-picker" id="platform-picker"><button id="platform" type="button" role="combobox" aria-label="Platform" aria-expanded="false" aria-controls="platform-menu" aria-haspopup="listbox"><span id="platform-label">All platforms</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div id="platform-menu" class="platform-menu" role="listbox" aria-label="Streaming platforms" hidden></div></div>
 </div>
 <div class="results"><span id="count" role="status" aria-live="polite"></span><button id="reset" hidden>Clear filters <span>×</span></button></div>
 <div class="collection" id="grid"></div>

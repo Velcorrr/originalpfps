@@ -11,8 +11,50 @@
   const state = {query:params.get('q')||'',platform:platforms.includes(params.get('platform'))?params.get('platform'):'',limit:84};
   let results=[],timer,returnFocus,renderedCount=0;
   const platformSections=new Map(),seriesSections=new Map();
-  for(const p of platforms)$('platform').append(new Option(`${p} (${all.filter(x=>x.platform===p).length.toLocaleString()})`,p));
-  $('search').value=state.query;$('platform').value=state.platform;
+  const choices=['',...platforms];
+  const platformCounts=new Map(choices.map(p=>[p,p?all.filter(x=>x.platform===p).length:all.length]));
+  let activeOption=0,typeBuffer='',typeTimer;
+  for(const [i,p] of choices.entries()){
+    const option=document.createElement('button');option.type='button';option.className='platform-option';option.id='platform-option-'+i;option.setAttribute('role','option');option.tabIndex=-1;
+    const label=document.createElement('span');label.textContent=p||'All platforms';
+    const count=document.createElement('span');count.className='option-count';count.textContent=platformCounts.get(p).toLocaleString();
+    const check=document.createElement('span');check.className='option-check';check.textContent='✓';check.setAttribute('aria-hidden','true');
+    option.append(label,count,check);option.addEventListener('click',()=>choosePlatform(i));option.addEventListener('pointermove',()=>highlightOption(i));$('platform-menu').append(option);
+  }
+  function syncPlatform(){
+    $('platform-label').textContent=state.platform||'All platforms';
+    [...$('platform-menu').children].forEach((o,i)=>o.setAttribute('aria-selected',String(choices[i]===state.platform)));
+  }
+  function highlightOption(i){
+    activeOption=(i+choices.length)%choices.length;
+    [...$('platform-menu').children].forEach((o,j)=>o.classList.toggle('active',j===activeOption));
+    $('platform').setAttribute('aria-activedescendant','platform-option-'+activeOption);
+  }
+  function openMenu(){
+    $('platform-menu').hidden=false;$('platform').setAttribute('aria-expanded','true');highlightOption(choices.indexOf(state.platform));
+  }
+  function closeMenu(){
+    $('platform-menu').hidden=true;$('platform').setAttribute('aria-expanded','false');$('platform').removeAttribute('aria-activedescendant');typeBuffer='';clearTimeout(typeTimer);
+  }
+  function choosePlatform(i){state.platform=choices[i];syncPlatform();closeMenu();update();$('platform').focus({preventScroll:true});}
+  $('platform').addEventListener('click',()=>{$('platform-menu').hidden?openMenu():closeMenu();});
+  $('platform').addEventListener('keydown',e=>{
+    if(e.key==='Escape'){if(!$('platform-menu').hidden){e.preventDefault();closeMenu();}return;}
+    if(e.key==='Tab'){closeMenu();return;}
+    if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){
+      e.preventDefault();if($('platform-menu').hidden){openMenu();if(e.key==='ArrowDown'||e.key==='ArrowUp')return;}
+      highlightOption(e.key==='Home'?0:e.key==='End'?choices.length-1:activeOption+(e.key==='ArrowDown'?1:-1));
+      $('platform-menu').children[activeOption].scrollIntoView({block:'nearest'});return;
+    }
+    if((e.key==='Enter'||e.key===' ')&&!$('platform-menu').hidden){e.preventDefault();choosePlatform(activeOption);return;}
+    if(e.key.length===1&&e.key!==' '&&!e.ctrlKey&&!e.altKey&&!e.metaKey){
+      e.preventDefault();if($('platform-menu').hidden)openMenu();typeBuffer+=e.key.toLowerCase();clearTimeout(typeTimer);typeTimer=setTimeout(()=>{typeBuffer='';},650);
+      const i=choices.findIndex(p=>(p||'All platforms').toLowerCase().startsWith(typeBuffer));if(i>=0)highlightOption(i);
+    }
+  });
+  document.addEventListener('pointerdown',e=>{if(!$('platform-picker').contains(e.target))closeMenu();});
+  $('platform-picker').addEventListener('focusout',e=>{if(!$('platform-picker').contains(e.relatedTarget))closeMenu();});
+  $('search').value=state.query;syncPlatform();
   const organized=[...all].sort((a,b)=>platforms.indexOf(a.platform)-platforms.indexOf(b.platform)||a.category.localeCompare(b.category,undefined,{sensitivity:'base',numeric:true})||a.name.localeCompare(b.name,undefined,{sensitivity:'base',numeric:true}));
   function syncUrl(){const p=new URLSearchParams();if(state.query)p.set('q',state.query);if(state.platform)p.set('platform',state.platform);try{history.replaceState(null,'',location.pathname+(p.size?'?'+p.toString():'')+location.hash);}catch{}}
   function openPreview(x,trigger){
@@ -50,8 +92,8 @@
     state.limit=84;const words=normalize(state.query.trim()).split(/\s+/).filter(Boolean);results=organized.filter(x=>(!state.platform||x.platform===state.platform)&&words.every(w=>searchIndex.get(x.id).includes(w)));
     const strong=document.createElement('strong');strong.textContent=results.length.toLocaleString();$('count').replaceChildren(strong,document.createTextNode(` picture${results.length===1?'':'s'}${state.platform?' · '+state.platform:''}`));$('reset').hidden=!(state.query||state.platform);render();syncUrl();
   }
-  function clear(){clearTimeout(timer);state.query='';state.platform='';$('search').value='';$('platform').value='';update();}
-  $('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{state.query=$('search').value;update();},100);});$('platform').addEventListener('change',()=>{state.platform=$('platform').value;update();});
+  function clear(){clearTimeout(timer);state.query='';state.platform='';$('search').value='';syncPlatform();closeMenu();update();}
+  $('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{state.query=$('search').value;update();},100);});
   $('reset').addEventListener('click',clear);$('empty-reset').addEventListener('click',clear);$('more').addEventListener('click',()=>{const start=renderedCount;state.limit+=84;render(true);$('grid').querySelectorAll('.card')[start]?.focus({preventScroll:true});});
   $('close').addEventListener('click',()=>$('preview').close());$('info-close').addEventListener('click',()=>$('info').close());$('info-open').addEventListener('click',()=>{returnFocus=$('info-open');$('info').showModal();document.body.classList.add('modal-open');});
   for(const id of ['preview','info']){

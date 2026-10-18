@@ -54,3 +54,13 @@ dialog{color:var(--text);padding:0;border:1px solid #e83b3b66;border-radius:18px
 .close svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;pointer-events:none}
 
 #load-sentinel{height:1px;margin:32px 0}
+
+/* Keep every platform visible in a compact, two-column menu. */
+.platform-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;width:min(440px,calc(100vw - 28px));max-height:none;overflow:visible}
+.platform-menu[hidden]{display:none}
+.platform-option{min-height:42px;padding:10px;gap:8px;line-height:1.3}
+.platform-option:first-child{grid-column:1/-1}
+.platform-option>span:first-child{min-width:0}
+.option-count,.option-check{flex-shrink:0;white-space:nowrap}
+@media(max-width:600px){.platform-menu{width:100%;max-height:none}.platform-option{font-size:11px;padding:9px 8px;gap:6px;min-height:42px}.option-count{font-size:9px}.option-check{width:10px;font-size:10px}}
+@media(max-height:480px){.platform-menu{gap:1px;padding:5px}.platform-option{min-height:30px;padding-block:5px;font-size:10px}}

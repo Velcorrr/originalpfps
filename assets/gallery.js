@@ -7,7 +7,7 @@
   const normalize = text => text.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const searchIndex = new Map(all.map(x=>[x.id,normalize(`${x.name} ${x.category} ${x.platform} ${x.generation||''}`)]));
   const params = new URLSearchParams(location.search);
-  const platforms = ['Netflix','Disney+','HBO Max','Prime Video','Crunchyroll','Paramount+','Peacock','Movies Anywhere','Xbox One / Series','Xbox 360'];
+  const platforms = ['Netflix','Disney+','HBO Max','Prime Video','Crunchyroll','Paramount+','Peacock','Movies Anywhere','Xbox One / Series','Xbox 360','PlayStation','Nintendo Switch'];
   const state = {query:params.get('q')||'',platform:platforms.includes(params.get('platform'))?params.get('platform'):'',limit:84};
   let results=[],timer,returnFocus,renderedCount=0;
   const platformSections=new Map(),seriesSections=new Map();

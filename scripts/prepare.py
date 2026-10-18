@@ -6,6 +6,10 @@ import json, concurrent.futures, hashlib
 SITE=Path(__file__).resolve().parents[1]
 ROOT=SITE.parent
 records=json.loads((ROOT/'_collection/manifest.json').read_text(encoding='utf-8'))
+catalog=SITE/'assets/catalog.js'
+cached={}
+if catalog.exists():
+    cached={r['id']:r for r in json.loads(catalog.read_text(encoding='utf-8').removeprefix('window.AVATARS=').removesuffix(';'))}
 for sub in ['thumbs','pictures']:(SITE/'assets'/sub).mkdir(exist_ok=True)
 
 def prepare(pair):
@@ -13,7 +17,8 @@ def prepare(pair):
     ident=hashlib.sha256(r['file'].encode()).hexdigest()[:14]
     dest=SITE/'assets'/'pictures'/(ident+'.webp')
     thumb=SITE/'assets'/'thumbs'/(ident+'.webp')
-    if not dest.exists() or not thumb.exists():
+    generated=not dest.exists() or not thumb.exists()
+    if generated:
         with Image.open(ROOT/r['file']) as im:
             im=ImageOps.exif_transpose(im).convert('RGBA')
             large=im.copy()
@@ -22,7 +27,10 @@ def prepare(pair):
             small=im.copy()
             small.thumbnail((320,320),Image.Resampling.LANCZOS)
             small.save(thumb,'WEBP',quality=84,method=0)
-    with Image.open(dest) as im:w,h=im.size
+    if not generated and ident in cached:
+        w,h=cached[ident]['width'],cached[ident]['height']
+    else:
+        with Image.open(dest) as im:w,h=im.size
     out={'id':ident,'name':r['name'],'platform':r['platform'],'category':r['category'],'width':w,'height':h}
     if r.get('generation'):out['generation']=r['generation']
     return out
